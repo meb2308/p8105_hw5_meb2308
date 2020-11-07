@@ -1,0 +1,47 @@
+---
+title: "Homework 5 Solutions"
+author: Meghan Bellerose
+date: November 7, 2020
+output: github_document
+---
+
+```{r, echo = FALSE}
+library(tidyverse)
+
+knitr::opts_chunk$set(
+  fig.width = 6,
+  fig.asp = .6,
+  out.width = "90%"
+)
+
+theme_set(theme_minimal() + theme(legend.position = "bottom"))
+
+options(
+  ggplot2.continuous.colour = "viridis",
+  ggplot2.continuous.fill = "viridis"
+)
+
+scale_colour_discrete = scale_colour_viridis_d
+scale_fill_discrete = scale_fill_viridis_d
+```
+
+# Problem 1
+
+The data for this problem were compiled by _The Washington Post_ and include information on more than 52,000 criminal homicides that occurred over the past decade in 50 major U.S. cities. 
+
+```{r}
+homicides = 
+  read_csv("./data/homicide_data.csv")
+```
+
+The dataset contains `r nrow(homicides)` rows and `r ncol(homicides)` columns, with each row representing a single homicide. The variables are location of a homicide (latitude and longitude), whether an arrest was made, and demographic information about the victim. 
+
+The following code creates a `city_state` variable and provides a table of the number of unresolved homicides and total number of homicides by city.
+
+```{r}
+homicides_city = 
+  homicides %>% 
+  unite("city_state", city:state, sep = ", ", remove = TRUE)
+```
+
+

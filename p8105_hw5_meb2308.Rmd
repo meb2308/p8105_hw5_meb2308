@@ -36,7 +36,7 @@ homicides =
 
 The dataset contains `r nrow(homicides)` rows and `r ncol(homicides)` columns, with each row representing a single homicide. The variables are location of a homicide (latitude and longitude), whether an arrest was made, and demographic information about the victim. 
 
-The following code creates a `city_state` variable and provides a table of the number of unresolved homicides and total number of homicides by city.
+The following code chunks create a `city_state` variable and provides a table of the number of unresolved homicides and total number of homicides by city.
 
 ```{r}
 homicides_city = 
@@ -44,4 +44,9 @@ homicides_city =
   unite("city_state", city:state, sep = ", ", remove = TRUE)
 ```
 
+```{r}
+homicides_city %>% 
+  
+  knitr::kable()
+```
 

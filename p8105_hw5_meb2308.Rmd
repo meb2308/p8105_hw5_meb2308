@@ -7,6 +7,7 @@ output: github_document
 
 ```{r, echo = FALSE}
 library(tidyverse)
+library(purrr)
 
 knitr::opts_chunk$set(
   fig.width = 6,
@@ -31,7 +32,7 @@ The data for this problem were compiled by _The Washington Post_ and include inf
 
 ```{r}
 homicides = 
-  read_csv("./data/homicide_data.csv")
+  read_csv("./hom_data/homicide_data.csv")
 ```
 
 The dataset contains `r nrow(homicides)` rows and `r ncol(homicides)` columns, with each row representing a single homicide. The variables are location of a homicide (latitude and longitude), whether an arrest was made, and demographic information about the victim. 
@@ -44,9 +45,19 @@ homicides_city =
   unite("city_state", city:state, sep = ", ", remove = TRUE)
 ```
 
+# Probelem 2
+
+This problem uses data from a longitudunal study with a control and experimental arm.
+
+First, I'll create a tidy dataframe with the participants' subject IDs, study arms, and observations over time. 
+
 ```{r}
-homicides_city %>% 
-  
-  knitr::kable()
+study_df = 
+  list.files("./data")
 ```
+
+Use purrr:map and save each result as new variable in dataframe 
+
+# Problem 3
+
 

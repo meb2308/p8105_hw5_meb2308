@@ -7,7 +7,6 @@ output: github_document
 
 ```{r, echo = FALSE}
 library(tidyverse)
-library(purrr)
 
 knitr::opts_chunk$set(
   fig.width = 6,
@@ -37,13 +36,74 @@ homicides =
 
 The dataset contains `r nrow(homicides)` rows and `r ncol(homicides)` columns, with each row representing a single homicide. The variables are location of a homicide (latitude and longitude), whether an arrest was made, and demographic information about the victim. 
 
-The following code chunks create a `city_state` variable and provides a table of the number of unresolved homicides and total number of homicides by city.
+The following code chunks create a `city_state` variable and provide a table of the number of unresolved homicides and total number of homicides by city.
 
 ```{r}
-homicides_city = 
+homicide_df =
   homicides %>% 
-  unite("city_state", city:state, sep = ", ", remove = TRUE)
+  mutate(
+    resolved = case_when(
+      disposition == "Closed without arrest" ~ "unsolved",
+      disposition == "Open/No arrest" ~ "unsolved",
+      disposition == "Closed by arrest" ~ "solved",
+    )
+  ) %>% 
+  unite("city_state", city:state, sep = ", ", remove = TRUE) %>% 
+  select(city_state, resolved) %>% 
+  filter(city_state !="Tulsa, AL")
 ```
+
+```{r}
+aggregate_df = 
+  homicide_df %>% 
+  group_by(city_state) %>% 
+  summarize(
+    hom_total = n(),
+    hom_unsolved = sum(resolved == "unsolved")
+  )
+```
+
+Try a proportion test for Boston, MA
+
+```{r}
+prop.test(
+  310, 
+  614)
+```
+
+Prepare for iteration
+
+```{r}
+prop.test(
+    aggregate_df %>%  filter(city_state == "Boston, MA") %>%  pull(hom_unsolved),
+    aggregate_df %>%  filter(city_state == "Boston, MA") %>%  pull(hom_total)) %>% 
+  broom::tidy()
+
+```
+
+Iteration
+
+```{r}
+results_df = 
+  aggregate_df %>% 
+  mutate(
+    prop_tests = map2(.x = hom_unsolved, .y = hom_total, ~prop.test(x = .x, n = .y)),
+    tidy_tests = map(.x = prop_tests, ~broom::tidy(.x))
+  ) %>% 
+  select(-prop_tests) %>% 
+  unnest(tidy_tests) %>% 
+  select(city_state, estimate, conf.low, conf.high)
+```
+
+```{r}
+results_df %>% 
+  mutate(city_state = fct_reorder(city_state, estimate)) %>% 
+  ggplot(aes(x = city_state, y = estimate)) +
+  geom_point() +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high)) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust =1))
+```
+
 
 # Probelem 2
 

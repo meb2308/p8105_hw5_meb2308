@@ -23,6 +23,8 @@ options(
 
 scale_colour_discrete = scale_colour_viridis_d
 scale_fill_discrete = scale_fill_viridis_d
+
+set.seed(10)
 ```
 
 # Problem 1
@@ -112,10 +114,12 @@ This problem uses data from a longitudinal study with a control and experimental
 
 First, I'll create a tidy dataframe with the participants' subject IDs, study arms, and observations over time. 
 
- * I used map to iterate over file names and read in data and saved each result as new variable in dataframe. 
+ * I used map to iterate over file names and read in data and saved each result as new variable in a dataframe. 
 
  * I tidied the result by manipulating file names to include control arm and subject ID then made sure weekly observations were tidy.
 
+
+Prep for iteration:
 ```{r}
 path_df =
   tibble(
@@ -123,14 +127,27 @@ path_df =
   ) %>% 
   mutate(
     path = str_c("data/", path))
-
-read_csv = 
   
-output = map_dfr(read.csv, path, .id = "Input")
+read.csv(path_df$path[[i]])
+```
 
-for (i in 1:20) {
-    output[[i]] = read.csv(path_df$path[[i]])
+Iteration:
+```{r}
+
+read_csv = function(x) {
+  read_csv = read.csv(x)
 }
+
+
+output = map(path_df, read_csv)
+
+path_df =
+  tibble(
+    path = list.files("./data"),
+  ) %>% 
+  mutate(
+    path = str_c("data/", path),
+    data = map(read_csv, path))
 
 ```
 
@@ -173,6 +190,18 @@ First I will will set some design elements for later simulations.
 This code generates 5000 datasets from the model.
 
 x∼Normal[μ,σ]
+
+```{r}
+simulation = function(n = 30, sigma = 5, mu = 0) {
+
+sim_data = 
+  tibble(
+    x = rnorm(sigma, mean = 1, ds = 1),
+    y = ...
+)
+
+}
+```
 
 For each dataset, save μ̂ and the p-value arising from a test of H:μ=0 using α=0.05
 

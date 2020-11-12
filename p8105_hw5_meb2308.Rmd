@@ -122,11 +122,37 @@ path_df =
     path = list.files("./data"),
   ) %>% 
   mutate(
-    path = str_c("data/",path),
-    data = map(.....))
+    path = str_c("data/", path))
 
-read.csv(path_df$path[[1]])
+read_csv = 
+  
+output = map_dfr(read.csv, path, .id = "Input")
+
+for (i in 1:20) {
+    output[[i]] = read.csv(path_df$path[[i]])
+}
+
 ```
+
+```{r}
+plot = 
+  path_df %>% 
+  pivot_longer(
+    week_1:week_8,
+    names_to = "week",
+    names_prefix = "week_",
+    values_to = "observation"
+    ) %>% 
+  ggplot(aes(x = week, y = observation, 
+    group = subject_id, color = subject_id)) +
+  geom_path() + 
+  facet_grid(~control) +
+  labs(
+    title = "Experimental vs Control Group Obervations over Time",
+    x = "Week",
+    y = "Observation")
+```
+
 
 The following code creates a spaghetti plot showing observations on each subject over time.
 
@@ -156,8 +182,10 @@ Repeat the above for μ={1,2,3,4,5,6}, and complete the following:
 
 * Make a plot showing the proportion of times the null was rejected (the power of the test) on the y axis and the true value of μ on the x axis. Describe the association between effect size and power.
 
+
 * Make a plot showing the average estimate of μ̂ on the y axis and the true value of μ on the x axis. Make a second plot (or overlay on the first) the average estimate of μ̂ only in samples for which the null was rejected on the y axis and the true value of μ on the x axis. 
 
+(filter to have less than 0.5 for p value)
 
 Is the sample average of μ̂ across tests for which the null is rejected approximately equal to the true value of μ ? Why or why not?
 

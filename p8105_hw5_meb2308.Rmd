@@ -7,6 +7,9 @@ output: github_document
 
 ```{r, echo = FALSE}
 library(tidyverse)
+library(broom)
+library(ggplot2)
+library(patchwork)
 
 knitr::opts_chunk$set(
   fig.width = 6,
@@ -24,7 +27,6 @@ options(
 scale_colour_discrete = scale_colour_viridis_d
 scale_fill_discrete = scale_fill_viridis_d
 
-set.seed(10)
 ```
 
 # Problem 1
@@ -128,11 +130,11 @@ path_df =
   mutate(
     path = str_c("data/", path))
   
-read.csv(path_df$path[[i]])
+read.csv(path_df$path[[1]])
 ```
 
 Iteration:
-```{r}
+```{r, error = TRUE}
 
 read_csv = function(x) {
   read_csv = read.csv(x)
@@ -151,7 +153,7 @@ path_df =
 
 ```
 
-```{r}
+```{r, error = TRUE}
 plot = 
   path_df %>% 
   pivot_longer(
@@ -184,26 +186,56 @@ Comment on differences between groups...
 First I will will set some design elements for later simulations.
 
 * Fix n=30
-* Fix σ=5
-* Set μ=0
-
-This code generates 5000 datasets from the model.
+* Fix σ=5 (variance = σ^2)
+* Set μ=0 (mean)
 
 x∼Normal[μ,σ]
 
+This code generates 5000 datasets from the model.
+
 ```{r}
-simulation = function(n = 30, sigma = 5, mu = 0) {
+simulation = function(n = 30, beta0 = 1, beta1) {
 
 sim_data = 
   tibble(
-    x = rnorm(sigma, mean = 1, ds = 1),
-    y = ...
-)
+    x = rnorm(n, mean = 1, sd = 1),
+    y = beta0 + beta1 * x + rnorm(n, 0, 25)
+  )
 
+tt <- t.test(y ~ x, sim_data)
+tidy(tt)
+
+linear_model = lm(y ~ x, data = sim_data) %>% 
+  broom::tidy()
+
+linear_model
 }
 ```
 
 For each dataset, save μ̂ and the p-value arising from a test of H:μ=0 using α=0.05
+
+First dataset:
+```{r}
+sim_results = 
+  rerun(5000, simulation(30, 5, 0)) %>% 
+  bind_rows() %>% 
+  select(term, estimate, p.value) %>% 
+  knitr::kable()
+```
+
+Iterate over all 5000 datasets:
+
+```{r}
+sim_results = 
+  tibble(beta1 = c(0,1,2,3,4,5,6)) %>% 
+  mutate(
+    sim_lists = map(.x = beta1, ~rerun(5000, simulation(beta1 = .x))),
+    sim_estimates = map(sim_lists, bind_rows)
+    ) %>%     
+  select(~sim_estimates) %>% 
+  unnest(sim_estimates)
+```
+
 
 To obtain the estimate and p-value, use broom::tidy to clean the output of t.test.
 

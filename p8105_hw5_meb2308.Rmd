@@ -128,32 +128,25 @@ path_df =
     path = list.files("./data"),
   ) %>% 
   mutate(
-    path = str_c("data/", path))
-  
+    path = str_c("data/", path),
+    path_names = path,
+    data = map(path, read_csv)) %>% 
+  separate(col = path_names, into = c("path_arm", "path_id"), sep = 9) %>% 
+  separate(col = path_id, into = c("id", ".csv"), sep = 2) %>% 
+  mutate(
+    arm = recode(path_arm, "data/con_" = "control", 
+    "data/exp_" = "experimental"))
+
+
+
+
 read.csv(path_df$path[[1]])
 ```
 
-Iteration:
-```{r, error = TRUE}
 
-read_csv = function(x) {
-  read_csv = read.csv(x)
-}
+The following code creates a spaghetti plot showing observations on each subject over time.
 
-
-output = map(path_df, read_csv)
-
-path_df =
-  tibble(
-    path = list.files("./data"),
-  ) %>% 
-  mutate(
-    path = str_c("data/", path),
-    data = map(read_csv, path))
-
-```
-
-```{r, error = TRUE}
+```{r}
 plot = 
   path_df %>% 
   pivot_longer(
@@ -171,11 +164,6 @@ plot =
     x = "Week",
     y = "Observation")
 ```
-
-
-The following code creates a spaghetti plot showing observations on each subject over time.
-
-
 
 Comment on differences between groups...
 

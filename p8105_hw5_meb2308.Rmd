@@ -213,7 +213,7 @@ The following code produces a plot showing the proportion of times the null was 
 sim_results %>% 
   group_by(beta1) %>% 
   mutate(
-    reject = ifelse(p.value < '0.05', 1, 0)
+    reject = ifelse(p_value < '0.05', 1, 0)
   ) %>% 
   summarise(prop_reject = mean(reject)) %>% 
   ggplot(aes(x = beta1, y = prop_reject)) +
@@ -230,14 +230,14 @@ There is a positive correlation between power and the true value of beta1. As be
 
 The following code produces a plot showing the average estimate of μ̂ on the y axis and the true value of μ on the x axis overlayed with a second plot with the average estimate of μ̂ only in samples for which the null was rejected on the y axis and the true value of μ on the x axis. 
 
-```{r}
+```{r, message = FALSE}
 full_plot_2 =
   sim_results %>% 
   group_by(beta1) %>% 
   summarise(mean = mean(beta1_estimate))
 ```
 
-```{r}
+```{r, message = FALSE}
 reject_plot_3 =
   sim_results %>% 
   filter(p_value < 0.05) %>% 
@@ -247,15 +247,22 @@ reject_plot_3 =
 
 ```{r}
 ggplot(full_plot_2, aes(x = beta1, y = mean)) +
-  geom_point(color = "green") +
+  geom_point() +
+  geom_line(color = "green") +
+    labs(
+    title = "All samples",
+    x = "True beta1",
+    y = "Mean beta1 estimate"
+  ) +
 ggplot(reject_plot_3, aes(x = beta1, y = mean)) +
-  geom_point(color = "magenta") +
+  geom_point() +
+  geom_line(color = "magenta") +
   labs(
-    title = "Sample mean beta1 estimate by true beta1" +
-    x = "True beta1" +
+    title = "Samples with rejected null",
+    x = "True beta1",
     y = "Mean beta1 estimate"
   )
 ```
 
-Is the sample average of μ̂ across tests for which the null is rejected approximately equal to the true value of μ ? Why or why not?
+The sample average of μ̂ across tests for which the null is rejectd is not  equal to the true value of μ. The mean beta1 estimate is higher in the samples where the null was rejected, because we reject the null when there is a significant difference between the mean beta1 estimate and true beta1. 
 

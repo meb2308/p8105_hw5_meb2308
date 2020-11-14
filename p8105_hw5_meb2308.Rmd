@@ -5,7 +5,7 @@ date: November 7, 2020
 output: github_document
 ---
 
-```{r, echo = FALSE}
+```{r}
 library(tidyverse)
 library(broom)
 library(ggplot2)
@@ -26,7 +26,6 @@ options(
 
 scale_colour_discrete = scale_colour_viridis_d
 scale_fill_discrete = scale_fill_viridis_d
-
 ```
 
 # Problem 1
@@ -110,7 +109,7 @@ results_df %>%
 Chicago, Illinois has the largest proportion of unsolved homicides and Richmond, Virginia has the lowest proportion.
 
 
-# Probelem 2
+# Problem 2
 
 This problem uses data from a longitudinal study with a control and experimental arm and 8 weeks of observation.
 
@@ -120,10 +119,8 @@ First, I'll create a tidy dataframe with the participants' subject IDs, study ar
 
  * I tidied the result by manipulating file names to include control arm and subject ID then made sure weekly observations were tidy.
 
-
-Prep for iteration:
-```{r}
-path_df =
+```{r, message = FALSE}
+long_study_df =
   tibble(
     path = list.files("./data"),
   ) %>% 
@@ -135,38 +132,33 @@ path_df =
   separate(col = path_id, into = c("id", ".csv"), sep = 2) %>% 
   mutate(
     arm = recode(path_arm, "data/con_" = "control", 
-    "data/exp_" = "experimental"))
-
-
-
-
-read.csv(path_df$path[[1]])
+    "data/exp_" = "experimental")) %>% 
+  select(arm, id, data) %>% 
+  unnest(data) %>% 
+  pivot_longer(
+    week_1:week_8,
+    names_to = "week",
+    names_prefix = "week_",
+    values_to = "observation"
+    )
 ```
 
 
 The following code creates a spaghetti plot showing observations on each subject over time.
 
 ```{r}
-plot = 
-  path_df %>% 
-  pivot_longer(
-    week_1:week_8,
-    names_to = "week",
-    names_prefix = "week_",
-    values_to = "observation"
-    ) %>% 
+long_study_df %>% 
   ggplot(aes(x = week, y = observation, 
-    group = subject_id, color = subject_id)) +
+    group = arm, color = arm)) +
   geom_path() + 
-  facet_grid(~control) +
+  geom_smooth() +
   labs(
     title = "Experimental vs Control Group Obervations over Time",
     x = "Week",
     y = "Observation")
 ```
 
-Comment on differences between groups...
-
+This plot shows that the study outcome increased within the experimental over the 8 week period but remained relatively constant within the control group. 
 
 
 # Problem 3
@@ -182,13 +174,9 @@ x∼Normal[μ,σ]
 This code generates 5000 datasets from the model.
 
 ```{r}
-?rnorm
+set.seed(1)
 
-```
-
-
-```{r}
-simulation = function(n = 30, beta0 = 2, beta1) {
+simulation = function(n = 30, beta0 = 2, beta1 = 0) {
 
 sim_data = 
   tibble(
@@ -196,16 +184,9 @@ sim_data =
     y = beta0 + beta1 * x + rnorm(n, 0, 25)
   )
 
-
-
-linear_model = lm(y ~ x, sim_data) %>% 
-  broom::tidy() %>% 
-  knitr::kable
-
+linear_model = lm(y ~ x, data = sim_data) %>% 
+  broom::tidy()
 }
-
-t.test(y ~ x, sim_data)
-
 ```
 
 
@@ -216,8 +197,7 @@ First dataset:
 sim_results = 
   rerun(5000, simulation(30, 5, 0)) %>% 
   bind_rows() %>% 
-  select(term, estimate, p.value) %>% 
-  knitr::kable()
+  select(term, estimate, p.value)
 ```
 
 Iterate over all 5000 datasets:
@@ -261,7 +241,8 @@ prop_reject_plot =
 * Make a plot showing the average estimate of μ̂ on the y axis and the true value of μ on the x axis. Make a second plot (or overlay on the first) the average estimate of μ̂ only in samples for which the null was rejected on the y axis and the true value of μ on the x axis. 
 
 ```{r}
-
+mu_plot_2 =
+  
 ```
 
 

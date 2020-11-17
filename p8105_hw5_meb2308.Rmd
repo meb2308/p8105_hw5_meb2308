@@ -264,5 +264,5 @@ ggplot(reject_plot_3, aes(x = beta1, y = mean)) +
   )
 ```
 
-The sample average of μ̂ across tests for which the null is rejectd is not  equal to the true value of μ. The mean beta1 estimate is higher in the samples where the null was rejected, because we reject the null when there is a significant difference between the mean beta1 estimate and true beta1. 
+The sample average of μ̂ across tests for which the null is rejected is not  equal to the true value of μ. The mean beta1 estimate is higher in the samples where the null was rejected, because we reject the null when there is a significant difference between the mean beta1 estimate and true beta1. 
 

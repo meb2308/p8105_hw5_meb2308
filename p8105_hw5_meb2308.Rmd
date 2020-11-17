@@ -173,96 +173,96 @@ x∼Normal[μ,σ]
 
 This code generates 5000 datasets from the model. For each dataset, I will save μ̂ and the p-value arising from a test of H:μ=0 using α=0.05. I'll repeat for μ={1,2,3,4,5,6}.
 
+
 ```{r}
 set.seed(1)
 
-simulation = function(n = 30, beta0 = 2, beta1 = 0) {
+sim_t = function(mu) {
 
 sim_data = 
   tibble(
-    x = rnorm(n, mean = 0, sd = 1),
-    y = beta0 + beta1 * x + rnorm(n, 0, 50)
-  )
-
-linear_model = lm(y ~ x, data = sim_data) %>% 
-  broom::tidy()
-
-tibble(
-  beta1_estimate = linear_model[[2,2]],
-  p_value = linear_model[[2,5]]
-)
-}
-```
-
-
-
-```{r}
-sim_results = 
-  tibble(beta1 = c(0,1,2,3,4,5,6)) %>% 
+    true_mu = mu,
+    x = rerun(5000, rnorm(n = 30, mean = mu, sd = 5))
+  ) %>% 
   mutate(
-    sim_lists = map(.x = beta1, ~rerun(5000, simulation(beta1 = .x))),
-    sim_estimates = map(sim_lists, bind_rows)
-    ) %>% 
-  select(-sim_lists) %>% 
-  unnest(sim_estimates)
+    t_test = map(.x = x, ~t.test(x = .x, mu = 0)),
+    tidy_t = map(.x = t_test, ~broom::tidy(.x))
+  ) %>% 
+  select(-t_test) %>% 
+  unnest(tidy_t) %>% 
+  select(true_mu, estimate, p.value)
+}
+
+output <- sim_t(mu=0)
+
+for (i in 1:6) {
+  temp <- sim_t(i)
+  output <- bind_rows(output, temp)
+}
 ```
 
 The following code produces a plot showing the proportion of times the null was rejected (the power of the test) on the y axis and the true value of μ on the x axis. 
 
-```{r}
-sim_results %>% 
-  group_by(beta1) %>% 
+```{r message = FALSE}
+results_df = 
+  output %>% 
   mutate(
-    reject = ifelse(p_value < '0.05', 1, 0)
-  ) %>% 
-  summarise(prop_reject = mean(reject)) %>% 
-  ggplot(aes(x = beta1, y = prop_reject)) +
+    decision = case_when(
+       p.value >= 0.05 ~ "fail to reject",
+       p.value < 0.05 ~ "reject")
+    ) %>% 
+  filter(decision == "reject")%>%
+  group_by(true_mu) %>%
+  summarize(power = n()/5000)
+  
+results_df %>% 
+  ggplot(aes(x = true_mu, y = power)) +
   geom_point(alpha = .5) +
   geom_line(alpha = .5) + 
   labs(
     title = "Proportion of times null hypothesis was rejected",
-    x = "True value of μ",
+    x = "True Mean",
     y = "Power"
   )
 ```
 
-There is a positive correlation between power and the true value of beta1. As beta1 increases, power increases as well. 
+There is a positive correlation between power and the true value of the mean. As the true value of the mean increases, power increases as well. 
 
 The following code produces a plot showing the average estimate of μ̂ on the y axis and the true value of μ on the x axis overlayed with a second plot with the average estimate of μ̂ only in samples for which the null was rejected on the y axis and the true value of μ on the x axis. 
 
 ```{r, message = FALSE}
 full_plot_2 =
-  sim_results %>% 
-  group_by(beta1) %>% 
-  summarise(mean = mean(beta1_estimate))
+  output %>% 
+  group_by(true_mu) %>% 
+  summarise(mean = mean(true_mu))
 ```
 
 ```{r, message = FALSE}
 reject_plot_3 =
-  sim_results %>% 
-  filter(p_value < 0.05) %>% 
-  group_by(beta1) %>% 
-  summarise(mean = mean(beta1_estimate))
+  output %>% 
+  filter(p.value < 0.05) %>% 
+  group_by(true_mu) %>% 
+  summarise(mean = mean(true_mu))
 ```
 
 ```{r}
-ggplot(full_plot_2, aes(x = beta1, y = mean)) +
+ggplot(full_plot_2, aes(x = true_mu, y = mean)) +
   geom_point() +
   geom_line(color = "green") +
     labs(
     title = "All samples",
-    x = "True beta1",
-    y = "Mean beta1 estimate"
+    x = "True Mean",
+    y = "Mean estimate"
   ) +
-ggplot(reject_plot_3, aes(x = beta1, y = mean)) +
+ggplot(reject_plot_3, aes(x = true_mu, y = mean)) +
   geom_point() +
   geom_line(color = "magenta") +
   labs(
     title = "Samples with rejected null",
-    x = "True beta1",
-    y = "Mean beta1 estimate"
+    x = "True Mean",
+    y = "Mean estimate"
   )
 ```
 
-The sample average of μ̂ across tests for which the null is rejected is not  equal to the true value of μ. The mean beta1 estimate is higher in the samples where the null was rejected, because we reject the null when there is a significant difference between the mean beta1 estimate and true beta1. 
+The sample average of μ̂ across tests for which the null is rejected is equal to the true value of μ.
 

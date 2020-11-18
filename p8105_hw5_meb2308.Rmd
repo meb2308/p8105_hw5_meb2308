@@ -234,7 +234,7 @@ The following code produces a plot showing the average estimate of μ̂ on the y
 full_plot_2 =
   output %>% 
   group_by(true_mu) %>% 
-  summarise(mean = mean(true_mu))
+  summarise(mean = mean(estimate))
 ```
 
 ```{r, message = FALSE}
@@ -242,7 +242,7 @@ reject_plot_3 =
   output %>% 
   filter(p.value < 0.05) %>% 
   group_by(true_mu) %>% 
-  summarise(mean = mean(true_mu))
+  summarise(mean = mean(estimate))
 ```
 
 ```{r}
@@ -264,5 +264,5 @@ ggplot(reject_plot_3, aes(x = true_mu, y = mean)) +
   )
 ```
 
-The sample average of μ̂ across tests for which the null is rejected is equal to the true value of μ.
+The sample average of the mean across tests for which the null is rejected is not equal to the that for the full sample, although it gets closer as the value of the true mu increases. This occurs because the higher true mu values allow for the detection of a larger sample size, which makes it easier to reject the null hypothesis.
 
